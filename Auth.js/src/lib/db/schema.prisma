@@ -12,7 +12,7 @@ model User {
     name          String?
     email         String          @unique
     password      String?
-    provider      String? // Campo per tracciare il sistema di autenticazione
+    provider      String? // Campo per tracciare il provider di autenticazione (es. "credentials", "github")
     emailVerified DateTime?
     image         String?
     accounts      Account[]

@@ -21,8 +21,8 @@ export const ErrorDisplay = () => {
       case 'invalid_email':
         message = 'Per favore, inserisci un indirizzo email valido.';
         break;
-      case 'AccessDenied':
-        message = 'Accesso negato. Riprova o contatta il supporto.';
+      case 'wrong_provider':
+        message = 'Questo account utilizza un altro metodo di accesso (es. GitHub).';
         break;
       case 'login_failed':
         message = 'Ci dispiace, si è verificato un errore durante il login.';

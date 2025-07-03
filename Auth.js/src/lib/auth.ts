@@ -13,7 +13,15 @@ const adapter = PrismaAdapter(db);
 export const { auth, handlers, signIn } = NextAuth({
     adapter,
     providers: [
-        GitHub,
+        GitHub({
+            profile(profile) {
+                return {
+                    id: profile.id.toString(),
+                    email: profile.email,
+                    provider: "github", // Imposta il provider per GitHub
+                };
+            },
+        }),
         Credentials({
             credentials: {
                 email: {},
@@ -30,9 +38,14 @@ export const { auth, handlers, signIn } = NextAuth({
                     return null; // Utente non trovato
                 }
 
+                // Verifica che l'utente usi il provider "credentials"
+                if (user.provider !== "credentials") {
+                    return null; // Utente non registrato con credenziali
+                }
+
                 // Verifica che la password esista
                 if (!user.password) {
-                    return null; // Password mancante (es. utente OAuth)
+                    return null; // Password mancante
                 }
 
                 // Confronta la password fornita con l'hash salvato
@@ -48,15 +61,15 @@ export const { auth, handlers, signIn } = NextAuth({
     ],
     callbacks: {
         async jwt({ token, account }) {
-            if (account?.provider === "credentials") {
-                token.credentials = true;
+            if (account?.provider === "credentials" || account?.provider === "github") {
+                token.provider = account.provider;
             }
             return token;
         },
     },
     jwt: {
         encode: async function (params) {
-            if (params.token?.credentials) {
+            if (params.token?.provider) {
                 const sessionToken = uuid();
 
                 if (!params.token.sub) {

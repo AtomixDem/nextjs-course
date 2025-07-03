@@ -4,10 +4,10 @@ import { Button } from "@/components/(UI)/Button";
 import { Input } from "@/components/(UI)/Input";
 import { auth } from "@/lib/auth";
 import { signIn } from "@/lib/auth";
+import db from "@/lib/db/db";
 import { executeAction } from "@/lib/executeAction";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import db from "@/lib/db/db";
 
 const Page = async ({
   searchParams,
@@ -40,26 +40,28 @@ const Page = async ({
         className="space-y-4"
         action={async (formData) => {
           "use server";
-          const email = formData.get("email");
-          // Verifica che email sia una stringa
-          if (typeof email !== "string") {
-            redirect("/sign-in?error=invalid_email");
-          }
-
-          const user = await db.user.findUnique({
-            where: { email: email.toLowerCase() },
-          });
-
-          if (user && user.provider !== "credentials") {
-            redirect("/sign-in?error=use_github");
-          }
-
           const res = await executeAction({
             actionFn: async () => {
-              await signIn("credentials", formData);
+              const result = await signIn("credentials", { ...formData, redirect: false });
+              if (!result?.ok) {
+                // Controlla se l'utente esiste e ha un provider diverso
+                const email = formData.get("email")?.toString().toLowerCase();
+                if (email) {
+                  const user = await db.user.findUnique({
+                    where: { email },
+                  });
+                  if (user && user.provider !== "credentials") {
+                    throw new Error("wrong_provider");
+                  }
+                }
+                throw new Error("invalid_credentials");
+              }
             },
           });
           if (!res.success) {
+            if (res.message === "wrong_provider") {
+              redirect("/sign-in?error=wrong_provider");
+            }
             redirect("/sign-in?error=invalid_credentials");
           }
         }}
@@ -85,7 +87,7 @@ const Page = async ({
 
       <div className="text-center">
         <Button variant="link">
-          <Link href="/sign-up">Don't have an account? Sign up</Link>
+          <Link href="/sign-up">Don&apos;t have an account? Sign up</Link>
         </Button>
       </div>
     </div>

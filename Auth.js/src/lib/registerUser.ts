@@ -1,7 +1,7 @@
 import db from "./db/db";
 import { executeAction } from "./executeAction";
 import { schema } from "./schema";
-import bcrypt from "bcryptjs"; // Importa bcryptjs
+import bcrypt from "bcryptjs";
 
 const signUp = async (FormData: FormData) => {
     const email = FormData.get("email");
@@ -22,7 +22,7 @@ const signUp = async (FormData: FormData) => {
     }
 
     // Hasha la password
-    const hashedPassword = await bcrypt.hash(validatedData.password, 10); // 10 è il numero di round di hashing
+    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
     // Se l'utente non esiste, procedi con la creazione
     return executeAction({
@@ -30,7 +30,8 @@ const signUp = async (FormData: FormData) => {
             await db.user.create({
                 data: {
                     email: validatedData.email.toLowerCase(),
-                    password: hashedPassword, // Salva la password hashata
+                    password: hashedPassword,
+                    provider: "credentials", // Imposta il provider
                 },
             });
         },
