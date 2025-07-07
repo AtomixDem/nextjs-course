@@ -7,7 +7,6 @@ import { Input } from "@/components/(UI)/Input";
 import { Button } from "@/components/(UI)/Button";
 import { signIn } from "@/lib/auth";
 import { ErrorDisplay } from "@/components/(auth)/ErrorDisplay";
-import db from "@/lib/db/db";
 
 const Page = async () => {
   const session = await auth();
@@ -37,46 +36,40 @@ const Page = async () => {
         className="space-y-4"
         action={async (formData: FormData) => {
           "use server";
-          const email = formData.get("email");
-          if (typeof email !== "string") {
-            redirect("/sign-up?error=invalid_email");
-          }
-
-          const existingUser = await db.user.findUnique({
-            where: { email: email.toLowerCase() },
-          });
-
-          if (existingUser) {
-            if (existingUser.provider === "github") {
-              redirect("/sign-up?error=use_github");
-            }
-            redirect("/sign-up?error=already_exists");
-          }
-
           const res = await signUp(formData);
 
           if (res.success) {
-            // Se la registrazione ha successo, procedi con il sign-in
             const { email, password } = Object.fromEntries(formData.entries());
+            console.log("Form data for signIn:", { email, password }); // Debug: log dei dati
             const signInRes = await signIn("credentials", {
               email,
               password,
               redirect: false,
             });
+            console.log("SignIn result:", signInRes); // Debug: log del risultato di signIn
 
-            if (!signInRes?.ok) {
-              redirect("/sign-in?error=login_failed");
-            }
           } else {
-            // Se la registrazione fallisce, controlla se c'è un errore specifico
-            if ("error" in res && res.error === "already_exists") {
-              redirect("/sign-up?error=already_exists");
+            if ("error" in res) {
+              if (res.error === "already_exists") {
+                redirect("/sign-up?error=already_exists");
+              } else if (res.error === "use_github") {
+                redirect("/sign-up?error=use_github");
+              } else {
+                redirect("/sign-up?error=generic");
+              }
             } else {
               redirect("/sign-up?error=generic");
             }
           }
         }}
       >
+        <Input
+          name="nameSurname"
+          placeholder="Nome e Cognome"
+          type="text"
+          required
+          autoComplete="name"
+        />
         <Input
           name="email"
           placeholder="Email"

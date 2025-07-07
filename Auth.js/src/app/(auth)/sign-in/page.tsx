@@ -40,19 +40,25 @@ const Page = async ({
         className="space-y-4"
         action={async (formData) => {
           "use server";
+          // Estrai e converti l'email in minuscolo prima di passarla a signIn
+          const email = formData.get("email")?.toString().toLowerCase();
+          const password = formData.get("password")?.toString();
+          if (!email || !password) {
+            redirect("/sign-in?error=invalid_data");
+          }
           const res = await executeAction({
             actionFn: async () => {
-              const result = await signIn("credentials", { ...formData, redirect: false });
+              const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+              });
               if (!result?.ok) {
-                // Controlla se l'utente esiste e ha un provider diverso
-                const email = formData.get("email")?.toString().toLowerCase();
-                if (email) {
-                  const user = await db.user.findUnique({
-                    where: { email },
-                  });
-                  if (user && user.provider !== "credentials") {
-                    throw new Error("wrong_provider");
-                  }
+                const user = await db.user.findUnique({
+                  where: { email },
+                });
+                if (user && user.provider !== "credentials") {
+                  throw new Error("wrong_provider");
                 }
                 throw new Error("invalid_credentials");
               }

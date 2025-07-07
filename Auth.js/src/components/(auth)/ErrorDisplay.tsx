@@ -1,19 +1,22 @@
 'use client';
-
 import { useSearchParams } from 'next/navigation';
 
 export const ErrorDisplay = () => {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
 
-  if (error) {
+  if (!error) return null;
+  
     let message = '';
     switch (error) {
+      case 'already_exists':
+        message = 'Questo account esiste già. Prova a fare il login.';
+        break;
       case 'invalid_credentials':
         message = 'Oops! Credenziali non valide, riprova.';
         break;
-      case 'already_exists':
-        message = 'Hey, un account con questa email già esiste!';
+      case "email_exists":
+        message = "Questa email è già in uso con un altro metodo di accesso.";
         break;
       case 'use_github':
         message = 'Ci dispiace, prova a fare il login con GitHub.';
@@ -33,11 +36,10 @@ export const ErrorDisplay = () => {
       default:
         message = 'Ci dispiace, abbiamo riscontrato un errore sconosciuto.';
     }
+
     return (
       <div className="bg-red-100 text-red-700 p-2 rounded text-center">
         {message}
       </div>
     );
-  }
-  return null;
 };

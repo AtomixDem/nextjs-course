@@ -1,10 +1,16 @@
 import z from "zod";
 
-// This schema is used to validate the user input for sign-up and sign-in forms
-// It ensures that the email is a valid email format and the password is at least 1 character long
-const schema  = z.object({
-    email: z.string().email(),
+// Schema per il login (solo email e password)
+const loginSchema = z.object({
+    email: z.string().email().min(1),
     password: z.string().min(1),
 });
 
-export { schema };
+// Schema per la registrazione (include nameSurname)
+const registerSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(1),
+    nameSurname: z.string().min(1, "Nome e Cognome sono obbligatori"),
+});
+
+export { loginSchema, registerSchema };

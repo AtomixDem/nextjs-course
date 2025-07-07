@@ -9,7 +9,7 @@ datasource db {
 
 model User {
     id            String          @id @default(cuid())
-    name          String?
+    nameSurname   String?
     email         String          @unique
     password      String?
     provider      String? // Campo per tracciare il provider di autenticazione (es. "credentials", "github")
